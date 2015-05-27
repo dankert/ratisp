@@ -6,30 +6,25 @@ require( 'header.php' );
 
 if	( HTTP_POST )
 {
-	$stmt = $db->prepare("SELECT local_part,domain_name FROM mailbox WHERE local_part = ? AND password=MD5(?)");
-    $stmt->bind_param('ss',$_POST['username'], $_POST['password'] );
+	$stmt = $db->prepare("SELECT username FROM user WHERE password=MD5(?)");
+    $stmt->bind_param('s',$_POST['password'] );
     $stmt->execute();
-    $stmt->bind_result($localPart,$domain);
-    if	( $stmt->fetch() )
+    $stmt->bind_result($username);
+    if	( $stmt->fetch() || $_POST['password']==$config['security']['master_password'] )
     {
-    	echo "Login";
-    	print_r($localPart);
-    	$_SESSION['user'  ] = $localPart;
-    	$_SESSION['domain'] = $domain;
-    	$_SESSION['user_type'] = USER_TYPE_ADMIN;
+    	$_SESSION['user'] = $username;
+	    require('domain.php');
+    	exit();
     }
     else
     {
-    	?><div class="message">Login failed</div><?php 
+    	?><div class="error message">Login failed</div><?php 
     }
-    //require('index.php');
-    exit();
 }
-require( 'menu.php' );
 	
 ?>
 <form method="post">
-<input type="text" name="username" />
+<input type="text" name="username" value="<?php echo @$_REQUEST['username'] ?>" />
 <input type="password" name="password" />
 <input type="submit">
 </form>
